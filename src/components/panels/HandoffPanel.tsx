@@ -9,6 +9,8 @@ import {
   generateCSS,
   generateGSAP,
   generateJSON,
+  generateMultiStateReact,
+  generateMultiStateCSS,
 } from "@/lib/code-generator";
 import { Copy, Check, Download, ArrowLeft } from "lucide-react";
 
@@ -29,14 +31,21 @@ export function HandoffPanel() {
     );
   }
 
-  const { motion } = selectedLayer;
+  const { motion, states } = selectedLayer;
+  const hasMultipleStates = states && states.length > 1;
 
   const codeOutputs: Record<ExportFormat, string> = {
-    react: generateMotionReact(motion, selectedLayer.name.replace(/\s/g, "")),
+    react: hasMultipleStates 
+      ? generateMultiStateReact(selectedLayer)
+      : generateMotionReact(motion, selectedLayer.name.replace(/\s/g, "")),
     vue: generateMotionVue(motion),
-    css: generateCSS(motion, selectedLayer.name.toLowerCase().replace(/\s/g, "-")),
+    css: hasMultipleStates
+      ? generateMultiStateCSS(selectedLayer)
+      : generateCSS(motion, selectedLayer.name.toLowerCase().replace(/\s/g, "-")),
     gsap: generateGSAP(motion, `.${selectedLayer.name.toLowerCase().replace(/\s/g, "-")}`),
-    json: generateJSON(motion),
+    json: hasMultipleStates 
+      ? JSON.stringify({ states, defaultMotion: motion }, null, 2)
+      : generateJSON(motion),
   };
 
   const handleCopy = async () => {
@@ -130,6 +139,20 @@ export function HandoffPanel() {
       {/* Specs summary */}
       <div className="p-4 border-t border-border">
         <h3 className="text-xs text-muted uppercase tracking-wide mb-3">Specs for Developer</h3>
+        
+        {hasMultipleStates && (
+          <div className="mb-4">
+            <div className="text-xs text-accent mb-2">Component States: {states.length}</div>
+            <div className="flex flex-wrap gap-2">
+              {states.map((s) => (
+                <span key={s.name} className="px-2 py-1 bg-panel rounded text-xs capitalize">
+                  {s.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="bg-panel p-3 rounded-md">
             <div className="text-muted text-xs mb-1">Duration</div>

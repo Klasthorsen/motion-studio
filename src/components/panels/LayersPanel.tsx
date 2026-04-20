@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useStudioStore } from "@/lib/store";
-import { Layers, Plus, Image, PenTool, Trash2 } from "lucide-react";
+import { Layers, Plus, Image, PenTool, Trash2, Upload, Sparkles, Code } from "lucide-react";
 import { FigmaImport } from "@/components/FigmaImport";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function LayersPanel() {
   const { layers, selectedLayerId, selectLayer, addLayer, removeLayer } = useStudioStore();
   const [showFigmaImport, setShowFigmaImport] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
 
   const handleAddPlaceholder = () => {
     addLayer({
@@ -41,6 +43,8 @@ export function LayersPanel() {
               <PenTool className="w-4 h-4 flex-shrink-0" />
             ) : layer.type === "image" ? (
               <Image className="w-4 h-4 flex-shrink-0" />
+            ) : layer.type === "generated" ? (
+              <Sparkles className="w-4 h-4 flex-shrink-0 text-accent" />
             ) : (
               <div className="w-4 h-4 rounded bg-accent/50 flex-shrink-0" />
             )}
@@ -60,11 +64,11 @@ export function LayersPanel() {
 
       <div className="p-3 border-t border-border space-y-2">
         <button
-          onClick={handleAddPlaceholder}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-border hover:bg-border/80 rounded-md text-sm transition-colors"
+          onClick={() => setShowImageUpload(true)}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent hover:bg-accent-hover text-white rounded-md text-sm font-medium transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          Add Layer
+          <Sparkles className="w-4 h-4" />
+          AI Analyze Image
         </button>
         <button
           onClick={() => setShowFigmaImport(true)}
@@ -73,9 +77,17 @@ export function LayersPanel() {
           <PenTool className="w-4 h-4" />
           Import from Figma
         </button>
+        <button
+          onClick={handleAddPlaceholder}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-border hover:bg-border/80 rounded-md text-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Placeholder
+        </button>
       </div>
 
       {showFigmaImport && <FigmaImport onClose={() => setShowFigmaImport(false)} />}
+      {showImageUpload && <ImageUpload onClose={() => setShowImageUpload(false)} />}
     </div>
   );
 }

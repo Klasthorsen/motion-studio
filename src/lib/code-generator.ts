@@ -1,4 +1,4 @@
-import type { MotionConfig, EasingType } from "./store";
+import type { MotionConfig, EasingType, ComponentState, Layer } from "./store";
 
 const easingToCSS: Record<EasingType, string> = {
   linear: "linear",
@@ -179,4 +179,127 @@ export function generateDesignTokens(config: MotionConfig): string {
   --motion-delay: ${transition.delay}s;
   --motion-ease: ${easingToCSS[transition.ease]};
 }`;
+}
+
+// Multi-state export for generated components
+export function generateMultiStateReact(layer: Layer): string {
+  if (!layer.states || layer.states.length <= 1) {
+    return generateMotionReact(layer.motion, layer.name.replace(/\s/g, ""));
+  }
+
+  const defaultState = layer.states.find((s) => s.name === "default");
+  const hoverState = layer.states.find((s) => s.name === "hover");
+  const activeState = layer.states.find((s) => s.name === "active");
+  const focusState = layer.states.find((s) => s.name === "focus");
+
+  const componentName = layer.name.replace(/\s/g, "");
+  
+  let code = `import { motion } from "motion/react"
+
+export function ${componentName}() {
+  return (
+    <motion.div`;
+
+  // Initial state
+  if (defaultState) {
+    const { animate } = defaultState.motion;
+    code += `
+      initial={{ opacity: ${animate.opacity}, scale: ${animate.scale}, y: ${animate.y} }}`;
+  }
+
+  // Animate (same as initial for interactive components)
+  if (defaultState) {
+    const { animate } = defaultState.motion;
+    code += `
+      animate={{ opacity: ${animate.opacity}, scale: ${animate.scale}, y: ${animate.y} }}`;
+  }
+
+  // Hover state
+  if (hoverState) {
+    const { animate } = hoverState.motion;
+    code += `
+      whileHover={{ opacity: ${animate.opacity}, scale: ${animate.scale}, y: ${animate.y} }}`;
+  }
+
+  // Active/Tap state
+  if (activeState) {
+    const { animate } = activeState.motion;
+    code += `
+      whileTap={{ opacity: ${animate.opacity}, scale: ${animate.scale}, y: ${animate.y} }}`;
+  }
+
+  // Focus state
+  if (focusState) {
+    const { animate } = focusState.motion;
+    code += `
+      whileFocus={{ opacity: ${animate.opacity}, scale: ${animate.scale}, y: ${animate.y} }}`;
+  }
+
+  // Transition
+  const transition = defaultState?.motion.transition || layer.motion.transition;
+  code += `
+      transition={{ duration: ${transition.duration}, ease: "${transition.ease}" }}
+    >
+      {/* ${layer.html ? "Generated HTML content" : "Your content"} */}
+    </motion.div>
+  )
+}`;
+
+  return code;
+}
+
+export function generateMultiStateCSS(layer: Layer): string {
+  if (!layer.states || layer.states.length <= 1) {
+    return generateCSS(layer.motion, layer.name.toLowerCase().replace(/\s/g, "-"));
+  }
+
+  const className = layer.name.toLowerCase().replace(/\s/g, "-");
+  const defaultState = layer.states.find((s) => s.name === "default");
+  const hoverState = layer.states.find((s) => s.name === "hover");
+  const activeState = layer.states.find((s) => s.name === "active");
+  const focusState = layer.states.find((s) => s.name === "focus");
+
+  let css = `.${className} {`;
+  
+  if (defaultState) {
+    const { animate, transition } = defaultState.motion;
+    css += `
+  opacity: ${animate.opacity};
+  transform: scale(${animate.scale}) translateY(${animate.y}px);
+  transition: all ${transition.duration}s ${easingToCSS[transition.ease]};`;
+  }
+  
+  css += `\n}\n`;
+
+  if (hoverState) {
+    const { animate } = hoverState.motion;
+    css += `
+.${className}:hover {
+  opacity: ${animate.opacity};
+  transform: scale(${animate.scale}) translateY(${animate.y}px);
+}
+`;
+  }
+
+  if (activeState) {
+    const { animate } = activeState.motion;
+    css += `
+.${className}:active {
+  opacity: ${animate.opacity};
+  transform: scale(${animate.scale}) translateY(${animate.y}px);
+}
+`;
+  }
+
+  if (focusState) {
+    const { animate } = focusState.motion;
+    css += `
+.${className}:focus {
+  opacity: ${animate.opacity};
+  transform: scale(${animate.scale}) translateY(${animate.y}px);
+}
+`;
+  }
+
+  return css;
 }

@@ -85,6 +85,25 @@ export function Canvas() {
   };
 
   const renderContent = () => {
+    // Render generated HTML component
+    if (selectedLayer.type === "generated" && selectedLayer.html) {
+      return (
+        <div className="relative">
+          {/* Render the generated HTML */}
+          <div
+            className="bg-white rounded-lg shadow-lg p-4"
+            dangerouslySetInnerHTML={{ __html: selectedLayer.html }}
+          />
+          {/* Show state indicator */}
+          {selectedLayer.states.length > 1 && (
+            <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full">
+              {selectedLayer.activeState}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (selectedLayer.type === "placeholder") {
       return (
         <div className="px-6 py-3 bg-accent text-white font-medium rounded-lg shadow-lg cursor-pointer select-none">

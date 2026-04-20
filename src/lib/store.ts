@@ -39,12 +39,25 @@ export interface MotionConfig {
   trigger: TriggerType;
 }
 
+export type ComponentStateName = "default" | "hover" | "active" | "focus" | "disabled" | "loading";
+
+export interface ComponentState {
+  name: ComponentStateName;
+  description: string;
+  motion: MotionConfig;
+  cssChanges?: string;
+}
+
 export interface Layer {
   id: string;
   name: string;
-  type: "image" | "figma" | "placeholder";
+  type: "image" | "figma" | "placeholder" | "generated";
   src?: string;
-  motion: MotionConfig;
+  html?: string;
+  css?: string;
+  states: ComponentState[];
+  activeState: ComponentStateName;
+  motion: MotionConfig; // Default/legacy motion
 }
 
 interface StudioState {
@@ -56,18 +69,28 @@ interface StudioState {
   playKey: number;
 
   // Actions
-  addLayer: (layer: Omit<Layer, "id">) => void;
+  addLayer: (layer: Omit<Layer, "id" | "states" | "activeState"> & { states?: ComponentState[] }) => void;
+  addGeneratedLayer: (data: {
+    name: string;
+    html: string;
+    css: string;
+    states: ComponentState[];
+    src?: string;
+  }) => void;
   removeLayer: (id: string) => void;
   selectLayer: (id: string | null) => void;
   updateLayerMotion: (id: string, motion: Partial<MotionConfig>) => void;
   updateInitial: (id: string, state: Partial<MotionState>) => void;
   updateAnimate: (id: string, state: Partial<MotionState>) => void;
   updateTransition: (id: string, config: Partial<TransitionConfig>) => void;
+  setActiveState: (id: string, stateName: ComponentStateName) => void;
+  updateStateMotion: (id: string, stateName: ComponentStateName, motion: Partial<MotionConfig>) => void;
   setMode: (mode: "simple" | "advanced") => void;
   setViewMode: (mode: "designer" | "developer") => void;
   play: () => void;
   reset: () => void;
   applyPreset: (id: string, preset: string) => void;
+  applyPresetToState: (id: string, stateName: ComponentStateName, preset: string) => void;
 }
 
 const defaultMotionState: MotionState = {
@@ -138,12 +161,22 @@ export const presets: Record<string, { initial?: Partial<MotionState>; animate?:
   },
 };
 
+const defaultStates: ComponentState[] = [
+  {
+    name: "default",
+    description: "Initial state",
+    motion: { ...defaultMotionConfig },
+  },
+];
+
 export const useStudioStore = create<StudioState>((set, get) => ({
   layers: [
     {
       id: "demo-button",
       name: "Button",
       type: "placeholder",
+      states: [...defaultStates],
+      activeState: "default",
       motion: { ...defaultMotionConfig },
     },
   ],
@@ -157,9 +190,34 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set((state) => ({
       layers: [
         ...state.layers,
-        { ...layer, id: `layer-${Date.now()}`, motion: { ...defaultMotionConfig } },
+        {
+          ...layer,
+          id: `layer-${Date.now()}`,
+          states: layer.states || [...defaultStates],
+          activeState: "default" as ComponentStateName,
+          motion: layer.motion || { ...defaultMotionConfig },
+        },
       ],
     })),
+
+  addGeneratedLayer: (data) =>
+    set((state) => {
+      const newLayer: Layer = {
+        id: `layer-${Date.now()}`,
+        name: data.name,
+        type: "generated",
+        html: data.html,
+        css: data.css,
+        src: data.src,
+        states: data.states,
+        activeState: "default",
+        motion: data.states[0]?.motion || { ...defaultMotionConfig },
+      };
+      return {
+        layers: [...state.layers, newLayer],
+        selectedLayerId: newLayer.id,
+      };
+    }),
 
   removeLayer: (id) =>
     set((state) => ({
@@ -206,6 +264,37 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       ),
     })),
 
+  setActiveState: (id, stateName) =>
+    set((state) => ({
+      layers: state.layers.map((l) => {
+        if (l.id !== id) return l;
+        const stateConfig = l.states.find((s) => s.name === stateName);
+        return {
+          ...l,
+          activeState: stateName,
+          motion: stateConfig?.motion || l.motion,
+        };
+      }),
+    })),
+
+  updateStateMotion: (id, stateName, motionUpdate) =>
+    set((state) => ({
+      layers: state.layers.map((l) => {
+        if (l.id !== id) return l;
+        return {
+          ...l,
+          states: l.states.map((s) =>
+            s.name === stateName
+              ? { ...s, motion: { ...s.motion, ...motionUpdate } }
+              : s
+          ),
+          motion: l.activeState === stateName 
+            ? { ...l.motion, ...motionUpdate }
+            : l.motion,
+        };
+      }),
+    })),
+
   setMode: (mode) => set({ mode }),
   setViewMode: (viewMode) => set({ viewMode }),
 
@@ -231,6 +320,32 @@ export const useStudioStore = create<StudioState>((set, get) => ({
             }
           : l
       ),
+    }));
+  },
+
+  applyPresetToState: (id, stateName, presetName) => {
+    const preset = presets[presetName];
+    if (!preset) return;
+    set((state) => ({
+      layers: state.layers.map((l) => {
+        if (l.id !== id) return l;
+        return {
+          ...l,
+          states: l.states.map((s) =>
+            s.name === stateName
+              ? {
+                  ...s,
+                  motion: {
+                    ...s.motion,
+                    initial: { ...s.motion.initial, ...preset.initial },
+                    animate: { ...s.motion.animate, ...preset.animate },
+                    transition: { ...s.motion.transition, ...preset.transition },
+                  },
+                }
+              : s
+          ),
+        };
+      }),
     }));
   },
 }));

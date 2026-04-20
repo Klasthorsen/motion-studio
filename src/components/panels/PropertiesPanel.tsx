@@ -4,7 +4,8 @@ import { useStudioStore, presets, type EasingType, type TriggerType } from "@/li
 import { Slider } from "@/components/ui/Slider";
 import { Select } from "@/components/ui/Select";
 import { MotionRecommendations } from "@/components/MotionRecommendations";
-import { Settings2, Sparkles, Zap } from "lucide-react";
+import { StateEditor } from "@/components/StateEditor";
+import { Settings2, Sparkles, Zap, Layers } from "lucide-react";
 
 const easingOptions: { value: EasingType; label: string }[] = [
   { value: "linear", label: "Linear" },
@@ -57,14 +58,31 @@ export function PropertiesPanel() {
   }
 
   const { initial, animate, transition } = selectedLayer.motion;
+  const hasMultipleStates = selectedLayer.states && selectedLayer.states.length > 1;
 
   return (
     <div className="h-full flex flex-col bg-panel border-l border-border overflow-y-auto">
+      {/* State Editor for generated components */}
+      {hasMultipleStates && (
+        <div className="border-b border-border">
+          <div className="p-4 pb-2">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Layers className="w-4 h-4 text-accent" />
+              Component States
+            </h2>
+            <p className="text-xs text-muted mt-1">
+              Edit motion for each interaction state
+            </p>
+          </div>
+          <StateEditor />
+        </div>
+      )}
+
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
-            Motion
+            {hasMultipleStates ? "Global Motion" : "Motion"}
           </h2>
           <div className="flex bg-border rounded-md p-0.5">
             <button
