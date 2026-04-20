@@ -28,35 +28,33 @@ export function LayersPanel() {
 
       <div className="flex-1 overflow-y-auto p-2">
         {layers.map((layer) => (
-          <button
+          <div
             key={layer.id}
             onClick={() => selectLayer(layer.id)}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors ${
+            className={`group w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors cursor-pointer ${
               selectedLayerId === layer.id
                 ? "bg-accent/20 text-accent"
                 : "hover:bg-border text-foreground"
             }`}
           >
             {layer.type === "figma" ? (
-              <PenTool className="w-4 h-4" />
+              <PenTool className="w-4 h-4 flex-shrink-0" />
             ) : layer.type === "image" ? (
-              <Image className="w-4 h-4" />
+              <Image className="w-4 h-4 flex-shrink-0" />
             ) : (
-              <div className="w-4 h-4 rounded bg-accent/50" />
+              <div className="w-4 h-4 rounded bg-accent/50 flex-shrink-0" />
             )}
             <span className="flex-1 truncate">{layer.name}</span>
-            {layers.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeLayer(layer.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            )}
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                removeLayer(layer.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         ))}
       </div>
 
