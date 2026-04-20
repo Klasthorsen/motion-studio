@@ -3,6 +3,7 @@
 import { useStudioStore, presets, type EasingType, type TriggerType } from "@/lib/store";
 import { Slider } from "@/components/ui/Slider";
 import { Select } from "@/components/ui/Select";
+import { MotionRecommendations } from "@/components/MotionRecommendations";
 import { Settings2, Sparkles, Zap } from "lucide-react";
 
 const easingOptions: { value: EasingType; label: string }[] = [
@@ -322,6 +323,9 @@ export function PropertiesPanel() {
           </section>
         )}
       </div>
+
+      {/* AI Recommendations */}
+      <MotionRecommendations />
     </div>
   );
 }
