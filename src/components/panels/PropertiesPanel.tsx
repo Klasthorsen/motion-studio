@@ -1,9 +1,9 @@
 "use client";
 
-import { useStudioStore, presets, type EasingType } from "@/lib/store";
+import { useStudioStore, presets, type EasingType, type TriggerType } from "@/lib/store";
 import { Slider } from "@/components/ui/Slider";
 import { Select } from "@/components/ui/Select";
-import { Settings2, Sparkles } from "lucide-react";
+import { Settings2, Sparkles, Zap } from "lucide-react";
 
 const easingOptions: { value: EasingType; label: string }[] = [
   { value: "linear", label: "Linear" },
@@ -25,6 +25,13 @@ const presetOptions = Object.keys(presets).map((key) => ({
     .trim(),
 }));
 
+const triggerOptions: { value: TriggerType; label: string }[] = [
+  { value: "mount", label: "On Mount" },
+  { value: "hover", label: "On Hover" },
+  { value: "tap", label: "On Tap/Click" },
+  { value: "inView", label: "In View (Scroll)" },
+];
+
 export function PropertiesPanel() {
   const {
     layers,
@@ -34,6 +41,7 @@ export function PropertiesPanel() {
     updateInitial,
     updateAnimate,
     updateTransition,
+    updateLayerMotion,
     applyPreset,
   } = useStudioStore();
 
@@ -229,6 +237,30 @@ export function PropertiesPanel() {
           </div>
         </section>
 
+        {/* Advanced: Trigger */}
+        {mode === "advanced" && (
+          <section>
+            <h3 className="text-xs text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Zap className="w-3 h-3" />
+              Trigger
+            </h3>
+            <div className="space-y-4">
+              <Select
+                label="Animation Trigger"
+                value={selectedLayer.motion.trigger}
+                onChange={(v) => updateLayerMotion(selectedLayer.id, { trigger: v as TriggerType })}
+                options={triggerOptions}
+              />
+              <p className="text-xs text-muted">
+                {selectedLayer.motion.trigger === "mount" && "Animation plays when component mounts"}
+                {selectedLayer.motion.trigger === "hover" && "Animation plays on mouse hover (whileHover)"}
+                {selectedLayer.motion.trigger === "tap" && "Animation plays on click/tap (whileTap)"}
+                {selectedLayer.motion.trigger === "inView" && "Animation plays when element enters viewport"}
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* Advanced: Spring Physics */}
         {mode === "advanced" && (
           <section>
@@ -265,6 +297,27 @@ export function PropertiesPanel() {
                   />
                 </>
               )}
+            </div>
+          </section>
+        )}
+
+        {/* Advanced: Stagger */}
+        {mode === "advanced" && (
+          <section>
+            <h3 className="text-xs text-muted uppercase tracking-wide mb-3">Stagger Children</h3>
+            <div className="space-y-4">
+              <Slider
+                label="Stagger Delay"
+                value={transition.stagger}
+                onChange={(v) => updateTransition(selectedLayer.id, { stagger: v })}
+                min={0}
+                max={0.5}
+                step={0.05}
+                unit="s"
+              />
+              <p className="text-xs text-muted">
+                Delay between each child element animation
+              </p>
             </div>
           </section>
         )}

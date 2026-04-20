@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useStudioStore } from "@/lib/store";
 import { Layers, Plus, Image, PenTool, Trash2 } from "lucide-react";
+import { FigmaImport } from "@/components/FigmaImport";
 
 export function LayersPanel() {
   const { layers, selectedLayerId, selectLayer, addLayer, removeLayer } = useStudioStore();
+  const [showFigmaImport, setShowFigmaImport] = useState(false);
 
   const handleAddPlaceholder = () => {
     addLayer({
@@ -66,13 +69,15 @@ export function LayersPanel() {
           Add Layer
         </button>
         <button
-          disabled
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-border/50 rounded-md text-sm text-muted cursor-not-allowed"
+          onClick={() => setShowFigmaImport(true)}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-border hover:bg-border/80 rounded-md text-sm transition-colors"
         >
           <PenTool className="w-4 h-4" />
           Import from Figma
         </button>
       </div>
+
+      {showFigmaImport && <FigmaImport onClose={() => setShowFigmaImport(false)} />}
     </div>
   );
 }

@@ -27,7 +27,7 @@ const easingToGSAP: Record<EasingType, string> = {
 };
 
 export function generateMotionReact(config: MotionConfig, componentName = "Component"): string {
-  const { initial, animate, transition } = config;
+  const { initial, animate, transition, trigger } = config;
   
   const initialStr = JSON.stringify(initial, null, 2).replace(/"/g, "").replace(/\n/g, "\n    ");
   const animateStr = JSON.stringify(animate, null, 2).replace(/"/g, "").replace(/\n/g, "\n    ");
@@ -35,6 +35,55 @@ export function generateMotionReact(config: MotionConfig, componentName = "Compo
   let transitionStr = `duration: ${transition.duration}`;
   if (transition.delay > 0) transitionStr += `, delay: ${transition.delay}`;
   transitionStr += `, ease: "${transition.ease}"`;
+
+  if (trigger === "hover") {
+    return `import { motion } from "motion/react"
+
+export function ${componentName}() {
+  return (
+    <motion.div
+      initial={${animateStr}}
+      whileHover={${initialStr}}
+      transition={{ ${transitionStr} }}
+    >
+      {/* Your content */}
+    </motion.div>
+  )
+}`;
+  }
+
+  if (trigger === "tap") {
+    return `import { motion } from "motion/react"
+
+export function ${componentName}() {
+  return (
+    <motion.div
+      initial={${animateStr}}
+      whileTap={${initialStr}}
+      transition={{ ${transitionStr} }}
+    >
+      {/* Your content */}
+    </motion.div>
+  )
+}`;
+  }
+
+  if (trigger === "inView") {
+    return `import { motion } from "motion/react"
+
+export function ${componentName}() {
+  return (
+    <motion.div
+      initial={${initialStr}}
+      whileInView={${animateStr}}
+      viewport={{ once: true }}
+      transition={{ ${transitionStr} }}
+    >
+      {/* Your content */}
+    </motion.div>
+  )
+}`;
+  }
 
   return `import { motion } from "motion/react"
 
