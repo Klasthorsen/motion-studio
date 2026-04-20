@@ -10,17 +10,27 @@ function getOpenAIClient() {
 const SYSTEM_PROMPT = `You are a UI/UX expert that analyzes component images and generates HTML prototypes.
 
 When given an image of a UI component, you will:
-1. Generate clean, semantic HTML with Tailwind CSS classes
+1. Generate clean, semantic HTML with Tailwind CSS classes that RECREATES the visual appearance
 2. Identify the component type (button, card, input, etc.)
 3. Suggest appropriate states (hover, active, focus, disabled)
 4. Recommend motion animations for each state
+
+CRITICAL RULES for HTML:
+- NEVER use <img> tags - the original image is not available at runtime
+- For image placeholders, use a <div> with Tailwind bg-gradient or solid color
+- For icons, use inline SVG or Tailwind-styled divs (e.g., emoji like ⭐ 🔔 ✓)
+- Use Tailwind CSS classes ONLY (no custom CSS needed in most cases)
+- Recreate the visual style: colors, spacing, borders, shadows, typography
+- Use placeholder text content that matches what you see ("Sign Up", "Welcome back", etc.)
+- Make it interactive: add button/input/link elements as appropriate
+- The component should LOOK like the image, using pure HTML + Tailwind
 
 Respond ONLY with valid JSON in this exact format:
 {
   "componentType": "button|card|input|modal|nav|other",
   "componentName": "Descriptive name",
-  "html": "<button class='...'>...</button>",
-  "css": "/* Any custom CSS needed */",
+  "html": "<div class='p-6 bg-white rounded-lg shadow-md'>...</div>",
+  "css": "",
   "states": [
     {
       "name": "default",
@@ -53,7 +63,7 @@ Respond ONLY with valid JSON in this exact format:
 
 Available motion presets: fadeIn, slideUp, slideDown, slideLeft, slideRight, scaleIn, bounce, rotate
 
-Use Tailwind CSS classes. Keep HTML minimal and clean. Focus on the visual appearance from the image.`;
+Keep HTML clean and focused. The HTML must render correctly WITHOUT any external images.`;
 
 export async function POST(request: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {

@@ -3,6 +3,7 @@
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import { useStudioStore } from "@/lib/store";
+import { HtmlPreview } from "@/components/HtmlPreview";
 import { Play, RotateCcw, MousePointer, Hand, Eye } from "lucide-react";
 
 export function Canvas() {
@@ -85,18 +86,17 @@ export function Canvas() {
   };
 
   const renderContent = () => {
-    // Render generated HTML component
+    // Render generated HTML component in iframe with Tailwind
     if (selectedLayer.type === "generated" && selectedLayer.html) {
       return (
         <div className="relative">
-          {/* Render the generated HTML */}
-          <div
-            className="bg-white rounded-lg shadow-lg p-4"
-            dangerouslySetInnerHTML={{ __html: selectedLayer.html }}
+          <HtmlPreview
+            html={selectedLayer.html}
+            css={selectedLayer.css}
+            activeState={selectedLayer.activeState}
           />
-          {/* Show state indicator */}
           {selectedLayer.states.length > 1 && (
-            <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full">
+            <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full z-20">
               {selectedLayer.activeState}
             </div>
           )}
